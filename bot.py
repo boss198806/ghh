@@ -4,7 +4,8 @@ import logging
 import re
 import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, ConversationHandler
+
 
 # Получаем токены из переменных окружения (секреты Railway)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
