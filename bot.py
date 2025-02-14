@@ -4,7 +4,6 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
 import requests
-import asyncio
 
 # Получаем токены из переменных окружения, которые настроены в Railway
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -36,14 +35,14 @@ def generate_text(prompt):
     return response_data['choices'][0]['message']['content'].strip()
 
 # Обработчик команды /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Отправка изображения
     image_url = "https://github.com/boss198806/ghh/blob/main/IMG_9235.JPG?raw=true"
-    await update.message.reply_photo(photo=image_url)
+    update.message.reply_photo(photo=image_url)
 
     # Отправка текста после изображения
     reply_keyboard = [['Расчет числа жизненного пути', 'Задать вопрос']]
-    await update.message.reply_text(
+    update.message.reply_text(
         'Привет! Я ваш бот-нумеролог. Что вы хотите сделать?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     )
@@ -57,50 +56,50 @@ def calculate_life_path_number(birthdate):
     return life_path_number
 
 # Обработчик для ввода даты рождения
-async def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
+def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
     return BIRTHDATE
 
 # Обработчик для получения числа жизненного пути
-async def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     birthdate = update.message.text
     if not is_valid_date(birthdate):
-        await update.message.reply_text('Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ.')
+        update.message.reply_text('Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ.')
         return BIRTHDATE
     
     life_path_number = calculate_life_path_number(birthdate)
-    await update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
+    update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
 
     keyboard = [[InlineKeyboardButton("Связаться с @MininaKsuisha", url="https://t.me/MininaKsuisha")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
+    update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
 
     return ConversationHandler.END
 
 # Обработчик для ввода вопроса
-async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
+def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
     return QUESTION
 
 # Обработчик для ответа на вопрос
-async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_message = update.message.text
     response_text = generate_text(user_message)
-    await update.message.reply_text(response_text)
+    update.message.reply_text(response_text)
 
     keyboard = [[InlineKeyboardButton("Связаться с @MininaKsuisha", url="https://t.me/MininaKsuisha")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
+    update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
 
     return ConversationHandler.END
 
 # Обработчик для команды /cancel
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
+def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
     return ConversationHandler.END
 
 # Основная функция
-async def main() -> None:
+def main() -> None:
     # Создание приложения бота
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
@@ -119,9 +118,8 @@ async def main() -> None:
     application.add_handler(conv_handler)
 
     # Запуск бота
-    await application.run_polling()
+    application.run_polling()
 
 # Запуск бота
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())  # Здесь используем asyncio.run() для запуска асинхронной функции main
+    main()
