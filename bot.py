@@ -118,8 +118,13 @@ async def main() -> None:
 
     application.add_handler(conv_handler)
 
-    # Запустите приложение
-    application.run_webhook(listen='0.0.0.0', port=int(os.getenv('PORT', 8443)))
+    # Запуск бота с вебхуком
+    application.run_webhook(
+        listen="0.0.0.0",  # Слушать на всех интерфейсах
+        port=int(os.getenv("PORT", 8443)),  # Порт на Railway
+        url_path=TELEGRAM_BOT_TOKEN,  # Путь вебхука
+        webhook_url=f"https://ghh-production.up.railway.app/{TELEGRAM_BOT_TOKEN}"  # Публичный URL Railway
+    )
 
 if __name__ == '__main__':
     import asyncio
