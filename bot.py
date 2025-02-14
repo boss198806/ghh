@@ -47,12 +47,12 @@ def generate_text(prompt):
         return "Извините, произошла ошибка при обработке вашего запроса."
 
 # Обработчик команды /start
-def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     image_url = "https://github.com/boss198806/ghh/blob/main/IMG_9235.JPG?raw=true"
-    update.message.reply_photo(photo=image_url)
+    await update.message.reply_photo(photo=image_url)
 
     reply_keyboard = [['Расчет числа жизненного пути', 'Задать вопрос']]
-    update.message.reply_text(
+    await update.message.reply_text(
         'Привет! Я ваш бот-нумеролог. Что вы хотите сделать?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     )
@@ -64,45 +64,45 @@ def calculate_life_path_number(birthdate):
     life_path_number = (total - 1) % 9 + 1
     return life_path_number
 
-def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
+async def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
     return BIRTHDATE
 
-def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     birthdate = update.message.text
     if not is_valid_date(birthdate):
-        update.message.reply_text('Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ.')
+        await update.message.reply_text('Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ.')
         return BIRTHDATE
 
     life_path_number = calculate_life_path_number(birthdate)
-    update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
+    await update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
 
     keyboard = [[InlineKeyboardButton("Связаться с @MininaKsuisha", url="https://t.me/MininaKsuisha")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
+    await update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
 
     return ConversationHandler.END
 
-def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
+async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
     return QUESTION
 
-def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_message = update.message.text
     response_text = generate_text(user_message)
-    update.message.reply_text(response_text)
+    await update.message.reply_text(response_text)
 
     keyboard = [[InlineKeyboardButton("Связаться с @MininaKsuisha", url="https://t.me/MininaKsuisha")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
+    await update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
 
     return ConversationHandler.END
 
-def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
     return ConversationHandler.END
 
-def main() -> None:
+async def main() -> None:
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     conv_handler = ConversationHandler(
@@ -118,7 +118,13 @@ def main() -> None:
 
     application.add_handler(conv_handler)
 
-    application.run_polling()
+    # Установите вебхук
+    webhook_url = 'https://your-domain.com/webhook'  # Замените на ваш URL вебхука
+    await application.bot.set_webhook(url=webhook_url)
+
+    # Запустите приложение
+    application.run_webhook(listen='0.0.0.0', port=8443, webhook_url=webhook_url)
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())
