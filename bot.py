@@ -103,8 +103,10 @@ def cancel(update, context):
     return ConversationHandler.END
 
 def main():
+    # Создание экземпляра приложения
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
+    # Конфигурация состояния разговора
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
