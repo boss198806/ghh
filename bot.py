@@ -119,11 +119,11 @@ async def main() -> None:
     application.add_handler(conv_handler)
 
     # Установите вебхук
-    webhook_url = 'https://your-domain.com/webhook'  # Замените на ваш URL вебхука
+    webhook_url = 'https://ghh-production.up.railway.app/webhook'  # Используйте ваш домен
     await application.bot.set_webhook(url=webhook_url)
 
     # Запустите приложение
-    application.run_webhook(listen='0.0.0.0', port=8443, webhook_url=webhook_url)
+    application.run_webhook(listen='0.0.0.0', port=int(os.getenv('PORT', 8443)), webhook_url=webhook_url)
 
 if __name__ == '__main__':
     import asyncio
