@@ -1,11 +1,12 @@
+import os
 import logging
 import openai
 import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
 
 # Настройте ваш API ключ от OpenAI
-openai.api_key = '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'
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Включите логирование
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -31,9 +32,9 @@ def generate_text(prompt):
     return response_data['choices'][0]['message']['content'].strip()
 
 # Обработчик команды /start
-def start(update: Update, context: CallbackContext) -> int:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_keyboard = [['Расчет числа жизненного пути', 'Задать вопрос']]
-    update.message.reply_text(
+    await update.message.reply_text(
         'Привет! Я ваш бот-нумеролог. Что вы хотите сделать?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     )
@@ -46,63 +47,61 @@ def calculate_life_path_number(birthdate):
     life_path_number = (total - 1) % 9 + 1
     return life_path_number
 
-def ask_birthdate(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
+async def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
     return BIRTHDATE
 
-def handle_birthdate(update: Update, context: CallbackContext) -> int:
+async def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     birthdate = update.message.text
     life_path_number = calculate_life_path_number(birthdate)
-    update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
+    await update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
 
     keyboard = [[InlineKeyboardButton("Связаться с @MininaKsuisha", url="https://t.me/MininaKsuisha")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
+    await update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
 
     return ConversationHandler.END
 
 # Обработчик входящих сообщений
-def handle_question(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
+async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
     return QUESTION
 
-def answer_question(update: Update, context: CallbackContext) -> int:
+async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_message = update.message.text
     response_text = generate_text(user_message)
-    update.message.reply_text(response_text)
+    await update.message.reply_text(response_text)
 
     keyboard = [[InlineKeyboardButton("Связаться с @MininaKsuisha", url="https://t.me/MininaKsuisha")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
+    await update.message.reply_text('Если у вас есть дополнительные вопросы, вы можете связаться со мной:', reply_markup=reply_markup)
 
     return ConversationHandler.END
 
-def cancel(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
     return ConversationHandler.END
 
-def main() -> None:
+async def main() -> None:
     # Вставьте ваш токен от BotFather
-    updater = Updater("7882413884:AAGDkw4ihAmrXCgzrB909tYvNxt9wJ2xNLE")
-
-    dispatcher = updater.dispatcher
+    application = ApplicationBuilder().token(os.getenv('TELEGRAM_BOT_TOKEN')).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            START: [MessageHandler(Filters.regex('^Расчет числа жизненного пути$'), ask_birthdate),
-                    MessageHandler(Filters.regex('^Задать вопрос$'), handle_question)],
-            BIRTHDATE: [MessageHandler(Filters.text & ~Filters.command, handle_birthdate)],
-            QUESTION: [MessageHandler(Filters.text & ~Filters.command, answer_question)]
+            START: [MessageHandler(filters.Regex('^Расчет числа жизненного пути$'), ask_birthdate),
+                    MessageHandler(filters.Regex('^Задать вопрос$'), handle_question)],
+            BIRTHDATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_birthdate)],
+            QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, answer_question)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 
-    dispatcher.add_handler(conv_handler)
+    application.add_handler(conv_handler)
 
     # Запуск бота
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())
