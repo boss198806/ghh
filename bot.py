@@ -83,8 +83,14 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 async def main() -> None:
+    # Получение токена из переменных окружения
+    telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+    if not telegram_bot_token:
+        logger.error("Telegram bot token is not set.")
+        return
+
     # Вставьте ваш токен от BotFather
-    application = ApplicationBuilder().token(os.getenv('TELEGRAM_BOT_TOKEN')).build()
+    application = ApplicationBuilder().token(telegram_bot_token).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
