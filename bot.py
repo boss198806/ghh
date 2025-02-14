@@ -1,13 +1,13 @@
 import os
-import logging
 import openai
-import telegram
+import logging
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
+import requests
 
-# Прописываем токены прямо в коде
-OPENAI_API_KEY = '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'  # Замените на ваш API ключ OpenAI
-TELEGRAM_BOT_TOKEN = '7882413884:AAGDkw4ihAmrXCgzrB909tYvNxt9wJ2xNLE'  # Замените на ваш токен Telegram
+# Получаем токены из переменных окружения, которые настроены в Railway
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Настройка API ключа OpenAI
 openai.api_key = OPENAI_API_KEY
