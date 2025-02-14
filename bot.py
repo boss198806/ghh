@@ -4,7 +4,7 @@ import logging
 import re
 import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
 
 # Получаем токены из переменных окружения (секреты Railway)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -102,8 +102,8 @@ def cancel(update, context):
     return ConversationHandler.END
 
 def main():
-    # Используем Application вместо Updater в версии 20+
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    # Используем Application (синхронный способ)
+    application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
