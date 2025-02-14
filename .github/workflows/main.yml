@@ -3,7 +3,7 @@ name: Deploy Bot
 on:
   push:
     branches:
-      - main  # или другая ветка, которую вы используете
+      - main  # или другая ветка, на которую вы хотите отслеживать изменения
 
 jobs:
   deploy:
@@ -25,7 +25,7 @@ jobs:
 
     - name: Run bot
       run: |
-        python bot.py  # Запустите ваш основной файл
+        python bot.py  # Запуск основного файла бота
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
