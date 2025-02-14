@@ -126,7 +126,7 @@ async def main() -> None:
         webhook_url=f"https://ghh-production.up.railway.app/{TELEGRAM_BOT_TOKEN}"  # Публичный URL Railway
     )
 
-# Прямой запуск main() без asyncio.run()
+# Правильный запуск с asyncio.run(), без создания задачи вручную
 if __name__ == '__main__':
     import asyncio
-    asyncio.create_task(main())
+    asyncio.run(main())
