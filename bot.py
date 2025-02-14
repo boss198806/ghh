@@ -123,7 +123,7 @@ async def main() -> None:
     await application.bot.set_webhook(url=webhook_url)
 
     # Запустите приложение
-    application.run_webhook(listen='0.0.0.0', port=int(os.getenv('PORT', 8443)), webhook_url=webhook_url)
+    application.run_webhook(listen='0.0.0.0', port=int(os.getenv('PORT', 8443)))
 
 if __name__ == '__main__':
     import asyncio
