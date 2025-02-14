@@ -13,8 +13,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # Обновление до версии v3 для кэширования зависимостей
     - name: Cache pip packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
