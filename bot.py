@@ -5,8 +5,12 @@ import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
 
+# Прописываем API ключи напрямую в коде (не рекомендуется для продакшн-версии)
+OPENAI_API_KEY = 'your_openai_api_key'
+TELEGRAM_BOT_TOKEN = 'your_telegram_bot_token'
+
 # Настройте ваш API ключ от OpenAI
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = OPENAI_API_KEY
 
 # Включите логирование
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -23,8 +27,7 @@ def generate_text(prompt):
         "Authorization": f"Bearer {openai.api_key}"
     }
     data = {
-        "model": "gpt-4o-mini",
-        "store": True,
+        "model": "gpt-4",
         "messages": [{"role": "user", "content": prompt}]
     }
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
@@ -40,19 +43,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     return START
 
-# Обработчик для расчета числа жизненного пути
+# Функция для расчета числа жизненного пути
 def calculate_life_path_number(birthdate):
     digits = [int(char) for char in birthdate if char.isdigit()]
     total = sum(digits)
     life_path_number = (total - 1) % 9 + 1
     return life_path_number
 
+# Обработчик для ввода даты рождения
 async def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
     return BIRTHDATE
 
+# Обработчик для получения числа жизненного пути
 async def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     birthdate = update.message.text
+    if not is_valid_date(birthdate):
+        await update.message.reply_text('Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ.')
+        return BIRTHDATE
+    
     life_path_number = calculate_life_path_number(birthdate)
     await update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
 
@@ -62,11 +71,12 @@ async def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     return ConversationHandler.END
 
-# Обработчик входящих сообщений
+# Обработчик для ввода вопроса
 async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
     return QUESTION
 
+# Обработчик для ответа на вопрос
 async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_message = update.message.text
     response_text = generate_text(user_message)
@@ -78,20 +88,20 @@ async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     return ConversationHandler.END
 
+# Обработчик для команды /cancel
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
     return ConversationHandler.END
 
+# Основная функция
 async def main() -> None:
-    # Получение токена из переменных окружения
-    telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-    if not telegram_bot_token:
-        logger.error("Telegram bot token is not set.")
-        return
+    # Используем прямые значения для токенов
+    telegram_bot_token = TELEGRAM_BOT_TOKEN
 
-    # Вставьте ваш токен от BotFather
+    # Создание приложения бота
     application = ApplicationBuilder().token(telegram_bot_token).build()
 
+    # Конфигурация обработки состояний
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -106,8 +116,9 @@ async def main() -> None:
     application.add_handler(conv_handler)
 
     # Запуск бота
-    application.run_polling()
+    await application.run_polling()
 
+# Запуск
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
