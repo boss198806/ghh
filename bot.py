@@ -112,7 +112,7 @@ def main():
                     MessageHandler(filters.Regex('^Задать вопрос$'), handle_question)],
             BIRTHDATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_birthdate)],
             QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, answer_question)]
-        }, 
+        },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 
