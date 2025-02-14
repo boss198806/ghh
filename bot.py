@@ -4,8 +4,7 @@ import logging
 import re
 import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, ConversationHandler
-
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler
 
 # Получаем токены из переменных окружения (секреты Railway)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -103,30 +102,24 @@ def cancel(update, context):
     return ConversationHandler.END
 
 def main():
-    # Создание экземпляра Updater
-    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
+    # Используем Application вместо Updater в версии 20+
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    dp = updater.dispatcher
-
-    # Конфигурация состояний разговора
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            START: [MessageHandler(Filters.regex('^Расчет числа жизненного пути$'), ask_birthdate),
-                    MessageHandler(Filters.regex('^Задать вопрос$'), handle_question)],
-            BIRTHDATE: [MessageHandler(Filters.text & ~Filters.command, handle_birthdate)],
-            QUESTION: [MessageHandler(Filters.text & ~Filters.command, answer_question)]
+            START: [MessageHandler(filters.Regex('^Расчет числа жизненного пути$'), ask_birthdate),
+                    MessageHandler(filters.Regex('^Задать вопрос$'), handle_question)],
+            BIRTHDATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_birthdate)],
+            QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, answer_question)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 
-    dp.add_handler(conv_handler)
+    application.add_handler(conv_handler)
 
     # Запуск бота с пуллингом
-    updater.start_polling()
-
-    # Ожидаем завершения работы
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
