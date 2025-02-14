@@ -1,9 +1,10 @@
 import os
 import openai
 import logging
+import re
+import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
-import requests
 
 # Получаем токены из переменных окружения (секреты Railway)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -20,6 +21,12 @@ logger = logging.getLogger(__name__)
 # Состояния разговора
 START, BIRTHDATE, QUESTION = range(3)
 
+# Функция для проверки корректности даты
+def is_valid_date(date_string):
+    # Проверяем, соответствует ли строка формату ДД.ММ.ГГГГ
+    date_pattern = re.compile(r'^\d{2}\.\d{2}\.\d{4}$')
+    return bool(date_pattern.match(date_string))
+
 # Функция для генерации текста с помощью OpenAI
 def generate_text(prompt):
     headers = {
@@ -30,9 +37,14 @@ def generate_text(prompt):
         "model": "gpt-4",
         "messages": [{"role": "user", "content": prompt}]
     }
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
-    response_data = response.json()
-    return response_data['choices'][0]['message']['content'].strip()
+    try:
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
+        response.raise_for_status()
+        response_data = response.json()
+        return response_data['choices'][0]['message']['content'].strip()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error generating text: {e}")
+        return "Извините, произошла ошибка при обработке вашего запроса."
 
 # Обработчик команды /start
 def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -61,7 +73,7 @@ def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not is_valid_date(birthdate):
         update.message.reply_text('Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ.')
         return BIRTHDATE
-    
+
     life_path_number = calculate_life_path_number(birthdate)
     update.message.reply_text(f'Ваше число жизненного пути: {life_path_number}')
 
