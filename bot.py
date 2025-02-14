@@ -1,18 +1,22 @@
 import os
 import logging
 import openai
-import requests
+import telegram
+from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
 
-# Прописываем API ключи напрямую в коде (не рекомендуется для продакшн-версии)
-OPENAI_API_KEY = 'your_openai_api_key'
-TELEGRAM_BOT_TOKEN = 'your_telegram_bot_token'
+# Загружаем переменные из .env (для локальной разработки)
+load_dotenv()
 
-# Настройте ваш API ключ от OpenAI
+# Получаем токены из переменных окружения
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+
+# Настройка API ключа OpenAI
 openai.api_key = OPENAI_API_KEY
 
-# Включите логирование
+# Включаем логирование
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -95,11 +99,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 # Основная функция
 async def main() -> None:
-    # Используем прямые значения для токенов
-    telegram_bot_token = TELEGRAM_BOT_TOKEN
-
     # Создание приложения бота
-    application = ApplicationBuilder().token(telegram_bot_token).build()
+    application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Конфигурация обработки состояний
     conv_handler = ConversationHandler(
