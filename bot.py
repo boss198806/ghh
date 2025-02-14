@@ -36,11 +36,9 @@ def generate_text(prompt):
 
 # Обработчик команды /start
 def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    # Отправка изображения
     image_url = "https://github.com/boss198806/ghh/blob/main/IMG_9235.JPG?raw=true"
     update.message.reply_photo(photo=image_url)
 
-    # Отправка текста после изображения
     reply_keyboard = [['Расчет числа жизненного пути', 'Задать вопрос']]
     update.message.reply_text(
         'Привет! Я ваш бот-нумеролог. Что вы хотите сделать?',
@@ -48,19 +46,16 @@ def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     return START
 
-# Функция для расчета числа жизненного пути
 def calculate_life_path_number(birthdate):
     digits = [int(char) for char in birthdate if char.isdigit()]
     total = sum(digits)
     life_path_number = (total - 1) % 9 + 1
     return life_path_number
 
-# Обработчик для ввода даты рождения
 def ask_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     update.message.reply_text('Пожалуйста, введите вашу дату рождения в формате ДД.ММ.ГГГГ')
     return BIRTHDATE
 
-# Обработчик для получения числа жизненного пути
 def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     birthdate = update.message.text
     if not is_valid_date(birthdate):
@@ -76,12 +71,10 @@ def handle_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return ConversationHandler.END
 
-# Обработчик для ввода вопроса
 def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     update.message.reply_text('Пожалуйста, задайте ваш вопрос.')
     return QUESTION
 
-# Обработчик для ответа на вопрос
 def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_message = update.message.text
     response_text = generate_text(user_message)
@@ -93,17 +86,13 @@ def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return ConversationHandler.END
 
-# Обработчик для команды /cancel
 def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     update.message.reply_text('До свидания! Если у вас возникнут вопросы, не стесняйтесь обращаться.')
     return ConversationHandler.END
 
-# Основная функция
 def main() -> None:
-    # Создание приложения бота
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # Конфигурация обработки состояний
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -117,9 +106,7 @@ def main() -> None:
 
     application.add_handler(conv_handler)
 
-    # Запуск бота
     application.run_polling()
 
-# Запуск бота
 if __name__ == '__main__':
     main()
