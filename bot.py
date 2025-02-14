@@ -115,7 +115,8 @@ async def main() -> None:
     # Запуск бота
     await application.run_polling()
 
-# Запуск (без использования asyncio.run())
+# Запуск бота (не используем asyncio.run())
 if __name__ == '__main__':
     import asyncio
+    # Просто вызываем main() без asyncio.run()
     asyncio.get_event_loop().run_until_complete(main())
