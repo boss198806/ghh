@@ -118,15 +118,9 @@ async def main() -> None:
 
     application.add_handler(conv_handler)
 
-    # Запуск бота с вебхуком
-    await application.run_webhook(
-        listen="0.0.0.0",  # Слушать на всех интерфейсах
-        port=int(os.getenv("PORT", 8443)),  # Порт на Railway
-        url_path=TELEGRAM_BOT_TOKEN,  # Путь вебхука
-        webhook_url=f"https://ghh-production.up.railway.app/{TELEGRAM_BOT_TOKEN}"  # Публичный URL Railway
-    )
+    # Запуск бота с пуллингом (убрали run_webhook())
+    application.run_polling()
 
-# Правильный запуск с asyncio.run(), без создания задачи вручную
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
