@@ -36,6 +36,11 @@ def generate_text(prompt):
 
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Отправка изображения
+    image_url = "https://github.com/boss198806/ghh/blob/main/IMG_9235.JPG?raw=true"
+    await update.message.reply_photo(photo=image_url)
+
+    # Отправка текста после изображения
     reply_keyboard = [['Расчет числа жизненного пути', 'Задать вопрос']]
     await update.message.reply_text(
         'Привет! Я ваш бот-нумеролог. Что вы хотите сделать?',
@@ -119,4 +124,4 @@ async def main() -> None:
 if __name__ == '__main__':
     import asyncio
     # Просто вызываем main() без asyncio.run()
-    asyncio.get_event_loop().run_until_complete(main())
+    await main()
