@@ -4,6 +4,7 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
 import requests
+import asyncio
 
 # Получаем токены из переменных окружения, которые настроены в Railway
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -120,8 +121,7 @@ async def main() -> None:
     # Запуск бота
     await application.run_polling()
 
-# Запуск бота (не используем asyncio.run())
+# Запуск бота
 if __name__ == '__main__':
     import asyncio
-    # Просто вызываем main() без asyncio.run()
-    await main()
+    asyncio.run(main())  # Здесь используем asyncio.run() для запуска асинхронной функции main
