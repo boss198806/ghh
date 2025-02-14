@@ -4,7 +4,7 @@ import logging
 import re
 import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
 
 # Получаем токены из переменных окружения (секреты Railway)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -23,7 +23,6 @@ START, BIRTHDATE, QUESTION = range(3)
 
 # Функция для проверки корректности даты
 def is_valid_date(date_string):
-    # Проверяем, соответствует ли строка формату ДД.ММ.ГГГГ
     date_pattern = re.compile(r'^\d{2}\.\d{2}\.\d{4}$')
     return bool(date_pattern.match(date_string))
 
@@ -103,25 +102,30 @@ def cancel(update, context):
     return ConversationHandler.END
 
 def main():
-    # Создание экземпляра приложения
-    application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    # Создание экземпляра Updater
+    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
 
-    # Конфигурация состояния разговора
+    dp = updater.dispatcher
+
+    # Конфигурация состояний разговора
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            START: [MessageHandler(filters.Regex('^Расчет числа жизненного пути$'), ask_birthdate),
-                    MessageHandler(filters.Regex('^Задать вопрос$'), handle_question)],
-            BIRTHDATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_birthdate)],
-            QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, answer_question)]
+            START: [MessageHandler(Filters.regex('^Расчет числа жизненного пути$'), ask_birthdate),
+                    MessageHandler(Filters.regex('^Задать вопрос$'), handle_question)],
+            BIRTHDATE: [MessageHandler(Filters.text & ~Filters.command, handle_birthdate)],
+            QUESTION: [MessageHandler(Filters.text & ~Filters.command, answer_question)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 
-    application.add_handler(conv_handler)
+    dp.add_handler(conv_handler)
 
-    # Запуск бота с пуллингом (синхронный способ)
-    application.run_polling()
+    # Запуск бота с пуллингом
+    updater.start_polling()
+
+    # Ожидаем завершения работы
+    updater.idle()
 
 if __name__ == '__main__':
     main()
